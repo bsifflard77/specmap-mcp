@@ -8,7 +8,10 @@
       "Bash(git init)",
       "Bash(git config user.name \"Monomoy Strategies\")",
       "Bash(git config user.email \"noreply@monomoy.com\")",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: SpecMap CLI v1.0.0-beta\n\nComplete AI-powered specification-driven development system.\n\nFeatures:\n- Core CLI with 20+ commands for full workflow\n- MCP server with 12 tools for AI integration\n- Claude Code skills system with 5 predefined skills\n- Comprehensive tracking and session management system\n- Complete documentation suite (2,500+ lines)\n- Test infrastructure with skills module coverage\n- Helper scripts for automation\n\nComponents:\n- Specification workflow (init, specify, clarify, plan, tasks)\n- RULEMAP framework integration (7-element structure)\n- Constitution-based governance\n- Quality scoring system (>= 8.0 threshold)\n- Project structure with 8 phase directories\n- Agent management and handoff protocols\n\nSkills System (NEW):\n- SkillManager for CRUD operations\n- 5 predefined workflow skills\n- Custom skill creation\n- MCP and CLI integration\n- Comprehensive documentation\n\nTracking System (NEW):\n- TRACKING.md for project-level status\n- Daily session summaries with RULEMAP analysis\n- Automated tracking updates\n- Quality metrics and retrospectives\n\nDocumentation:\n- README.md (400+ lines)\n- SKILLS.md (700+ lines)\n- TRACKING.md (300+ lines)\n- PROJECT-STATUS.md (500+ lines)\n- Session summaries with complete example\n- Scripts documentation\n\nCode Quality:\n- 8,000+ lines of production code\n- 13 passing tests (skills: 100% coverage)\n- RULEMAP score: 8.8/10\n- Constitution compliant\n\nBuilt with Claude Code - AI-Powered Development\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(gh --version)",
+      "Bash(git add -A)"
     ],
     "deny": [],
     "ask": []
