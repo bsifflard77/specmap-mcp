@@ -1,0 +1,1 @@
+# SpecMap MCP Server

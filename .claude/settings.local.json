@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"d:\\Monomoy Strategies\\Projects\\specmap-cli\\src\\my-awesome-app-2025-10-18\\.claude\\skills\")",
+      "Bash(dir \"d:\\Monomoy Strategies\\Projects\\specmap-cli\")",
+      "Bash(findstr README)",
+      "Bash(python scripts/new-session.py 2025-10-19)",
+      "Bash(git init)",
+      "Bash(git config user.name \"Monomoy Strategies\")",
+      "Bash(git config user.email \"noreply@monomoy.com\")",
+      "Bash(git add .)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

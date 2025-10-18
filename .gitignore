@@ -1,0 +1,106 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Project specific
+*.log
+*.tmp
+*.temp
+.cache/
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Build artifacts
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Documentation builds
+docs/_build/
+docs/.build/
+
+# Temporary test projects (exclude example projects in src/)
+src/my-awesome-app-*/
+src/test-*/
+src/demo-*/
+
+# Session summaries - keep the directory structure but ignore drafts
+session-summaries/.drafts/
+session-summaries/*-draft.md
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Local configuration
+.specmap/local-config.yaml
+config.local.yaml
+
+# MCP server specific
+mcp-server/.env
+mcp-server/config.local.yaml

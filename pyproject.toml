@@ -1,0 +1,26 @@
+[project]
+name = "specmap-cli"
+version = "1.0.0"
+description = "Unified Spec-Kit + RULEMAP-PRD system for spec-driven development"
+authors = [
+    {name = "RULEMAP-PRD Team"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+    "pyyaml>=6.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+specmap = "specmap.cli:main"
+
+[build-system]
+requires = ["setuptools>=65.0"]
+build-backend = "setuptools.build_backend"
+
+[tool.setuptools]
+packages = ["specmap"]
+package-dir = {"" = "src"}
