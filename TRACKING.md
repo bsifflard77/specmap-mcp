@@ -25,8 +25,9 @@ This tracking document follows SpecMap's own principles:
 | MCP Server | ✅ Complete | 100% | 2025-10-18 |
 | Skill System | ✅ Complete | 100% | 2025-10-18 |
 | Tracking System | ✅ Complete | 100% | 2025-10-18 |
+| Folder Management | ✅ Complete | 100% | 2025-10-22 |
 | GitHub Integration | ✅ Complete | 100% | 2025-10-18 |
-| Documentation | ✅ Complete | 100% | 2025-10-18 |
+| Documentation | ✅ Complete | 100% | 2025-10-22 |
 | Testing | 🟡 In Progress | 60% | 2025-10-18 |
 | Examples | ⚪ Planned | 0% | - |
 

@@ -17,6 +17,7 @@ from .structure import ProjectStructure, sanitize_name
 from .init import ProjectInitializer
 from .agents import AgentManager
 from .skills import SkillManager
+from .folders import FolderManager, format_size, get_folder_guide
 
 console = Console()
 
@@ -959,6 +960,265 @@ def skill_delete(skill_name, force):
     except Exception as e:
         console.print(f"[red]Error:[/red] {str(e)}")
         sys.exit(1)
+
+
+# ============================================================================
+# Folder Management Commands
+# ============================================================================
+
+@main.group()
+def folder():
+    """Manage project folders and session organization."""
+    pass
+
+
+@folder.group()
+def session():
+    """Session summary folder management."""
+    pass
+
+
+@session.command('create')
+@click.option('--date', help='Date for session (YYYY-MM-DD, default: today)')
+@click.option('--open', '-o', 'open_editor', is_flag=True, help='Open in editor after creation')
+def session_create(date, open_editor):
+    """Create a new session summary file."""
+    project_path = Path.cwd()
+    manager = FolderManager(project_path)
+
+    try:
+        # Parse date if provided
+        session_date = None
+        if date:
+            try:
+                session_date = datetime.strptime(date, "%Y-%m-%d")
+            except ValueError:
+                console.print(f"[red]Error:[/red] Invalid date format. Use YYYY-MM-DD")
+                sys.exit(1)
+
+        # Create session file
+        session_file = manager.create_session_file(session_date)
+
+        console.print(f"[green]OK[/green] Session file created!")
+        console.print(f"[cyan]Location:[/cyan] {session_file.relative_to(project_path)}")
+        console.print(f"[cyan]Full path:[/cyan] {session_file}")
+
+        # Open in editor if requested
+        if open_editor:
+            editor = os.environ.get('EDITOR', 'nano')
+            os.system(f'{editor} "{session_file}"')
+
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {str(e)}")
+        sys.exit(1)
+
+
+@session.command('list')
+@click.option('--year', type=int, help='Filter by year')
+@click.option('--month', type=int, help='Filter by month (1-12)')
+@click.option('--limit', type=int, default=20, help='Max sessions to display')
+def session_list(year, month, limit):
+    """List all session summaries."""
+    project_path = Path.cwd()
+    manager = FolderManager(project_path)
+
+    try:
+        sessions = manager.list_sessions(year, month)
+
+        if not sessions:
+            console.print("[yellow]No sessions found[/yellow]")
+            return
+
+        # Create table
+        table = Table(title=f"Session Summaries ({len(sessions)} total)")
+        table.add_column("Date", style="cyan")
+        table.add_column("Path", style="white")
+        table.add_column("Size", justify="right", style="green")
+        table.add_column("Modified", style="dim")
+
+        for session in sessions[:limit]:
+            table.add_row(
+                session['date'].strftime("%Y-%m-%d"),
+                str(session['relative_path']),
+                format_size(session['size']),
+                session['modified'].strftime("%Y-%m-%d %H:%M")
+            )
+
+        console.print(table)
+
+        if len(sessions) > limit:
+            console.print(f"\n[dim]Showing {limit} of {len(sessions)} sessions[/dim]")
+            console.print(f"[dim]Use --limit to show more[/dim]")
+
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {str(e)}")
+        sys.exit(1)
+
+
+@session.command('migrate')
+@click.option('--dry-run', is_flag=True, help='Show what would be migrated without doing it')
+def session_migrate(dry_run):
+    """Migrate legacy flat session files to hierarchical structure."""
+    project_path = Path.cwd()
+    manager = FolderManager(project_path)
+
+    try:
+        if dry_run:
+            console.print("[yellow]DRY RUN MODE[/yellow] - No files will be moved\n")
+
+        console.print("Migrating legacy session files...")
+
+        if not dry_run:
+            stats = manager.migrate_legacy_sessions()
+        else:
+            # Just count what would be migrated
+            legacy_files = list(manager.session_summaries_root.glob("*.md"))
+            legacy_files = [f for f in legacy_files if f.name not in ['README.md', 'TEMPLATE.md']]
+            stats = {'migrated': 0, 'skipped': len(legacy_files), 'errors': 0}
+
+        console.print(f"\n[green]Migration complete![/green]")
+        console.print(f"  Migrated: {stats['migrated']}")
+        console.print(f"  Skipped:  {stats['skipped']}")
+        console.print(f"  Errors:   {stats['errors']}")
+
+        if dry_run and stats['skipped'] > 0:
+            console.print(f"\n[dim]Run without --dry-run to perform migration[/dim]")
+
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {str(e)}")
+        sys.exit(1)
+
+
+@folder.command('categories')
+def folder_categories():
+    """List all document categories and their purposes."""
+    project_path = Path.cwd()
+    manager = FolderManager(project_path)
+
+    console.print(Panel.fit(
+        "[bold cyan]SpecMap Document Categories[/bold cyan]",
+        border_style="cyan"
+    ))
+
+    categories = manager.list_document_categories()
+
+    for category, info in categories.items():
+        console.print(f"\n[bold cyan]{category.upper()}[/bold cyan]")
+        console.print(f"  Path: [white]{info['path']}[/white]")
+        console.print(f"  Purpose: [dim]{info['description']}[/dim]")
+        console.print(f"  Subdirectories:")
+        for subdir in info['subdirs']:
+            console.print(f"    • {subdir}")
+
+
+@folder.command('validate')
+def folder_validate():
+    """Validate project folder structure."""
+    project_path = Path.cwd()
+    manager = FolderManager(project_path)
+
+    console.print("Validating folder structure...\n")
+
+    validation = manager.validate_folder_structure()
+
+    # Count status
+    exists = sum(1 for v in validation.values() if v)
+    missing = len(validation) - exists
+
+    # Display results
+    table = Table(title="Folder Structure Validation")
+    table.add_column("Folder", style="white")
+    table.add_column("Status", justify="center")
+
+    for folder, exists_flag in sorted(validation.items()):
+        status = "[green]✓[/green]" if exists_flag else "[red]✗[/red]"
+        table.add_row(folder, status)
+
+    console.print(table)
+
+    # Summary
+    if missing == 0:
+        console.print(f"\n[green]OK[/green] All folders exist ({exists}/{len(validation)})")
+    else:
+        console.print(f"\n[yellow]Warning:[/yellow] {missing} folders missing")
+        console.print(f"[dim]Run 'specmap folder create-all' to create missing folders[/dim]")
+
+
+@folder.command('create-all')
+def folder_create_all():
+    """Create all standard folders if they don't exist."""
+    project_path = Path.cwd()
+    manager = FolderManager(project_path)
+
+    try:
+        console.print("Creating folder structure...")
+        created = manager.create_all_folders()
+
+        console.print(f"\n[green]OK[/green] Folder structure created!")
+        console.print(f"Total folders: {len(created)}")
+
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {str(e)}")
+        sys.exit(1)
+
+
+@folder.command('stats')
+def folder_stats():
+    """Show folder usage statistics."""
+    project_path = Path.cwd()
+    manager = FolderManager(project_path)
+
+    try:
+        console.print("Calculating folder statistics...\n")
+        stats = manager.get_folder_stats()
+
+        # Overall stats
+        console.print(Panel.fit(
+            f"[bold]Total Files:[/bold] {stats['total_files']}\n"
+            f"[bold]Total Folders:[/bold] {stats['total_folders']}\n"
+            f"[bold]Total Size:[/bold] {format_size(stats['total_size_bytes'])}\n"
+            f"[bold]Session Summaries:[/bold] {stats['sessions_count']}",
+            title="[cyan]Overall Statistics[/cyan]",
+            border_style="cyan"
+        ))
+
+        # Category breakdown
+        if stats['categories']:
+            console.print("\n[bold cyan]Category Breakdown:[/bold cyan]\n")
+
+            table = Table()
+            table.add_column("Category", style="cyan")
+            table.add_column("Files", justify="right", style="white")
+            table.add_column("Folders", justify="right", style="white")
+            table.add_column("Size", justify="right", style="green")
+
+            for category, cat_stats in stats['categories'].items():
+                table.add_row(
+                    category,
+                    str(cat_stats['files']),
+                    str(cat_stats['folders']),
+                    format_size(cat_stats['size_bytes'])
+                )
+
+            console.print(table)
+
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {str(e)}")
+        sys.exit(1)
+
+
+@folder.command('guide')
+@click.option('--save', is_flag=True, help='Save guide to FOLDER-GUIDE.md')
+def folder_guide(save):
+    """Display folder organization guide."""
+    guide_text = get_folder_guide()
+
+    if save:
+        guide_file = Path.cwd() / "FOLDER-GUIDE.md"
+        guide_file.write_text(guide_text, encoding='utf-8')
+        console.print(f"[green]OK[/green] Guide saved to {guide_file}")
+    else:
+        console.print(guide_text)
 
 
 if __name__ == '__main__':

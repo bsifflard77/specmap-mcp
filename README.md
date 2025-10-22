@@ -235,6 +235,20 @@ specmap skill create <name>     # Create custom
 specmap skill delete <name>     # Remove skill
 ```
 
+### Folder Management
+```bash
+# Session management
+specmap folder session create           # Create new session
+specmap folder session list            # List all sessions
+specmap folder session migrate         # Migrate legacy sessions
+
+# Document organization
+specmap folder categories              # List document categories
+specmap folder validate               # Validate folder structure
+specmap folder stats                  # Show usage statistics
+specmap folder guide                  # Display organization guide
+```
+
 ## RULEMAP Framework
 
 The 7-element specification framework:
@@ -400,6 +414,7 @@ python -m specmap_mcp.server
 ## Documentation
 
 - [Skills Guide](docs/SKILLS.md) - Complete skill documentation
+- [Folder Management](docs/FOLDER-MANAGEMENT.md) - Folder organization guide
 - [MCP Server API](docs/MCP_SERVER.md) - MCP server reference
 - [RULEMAP Guide](docs/RULEMAP.md) - Framework details
 - [CLI Reference](docs/CLI.md) - Command reference
@@ -461,6 +476,7 @@ MIT License - see LICENSE file
 - [x] Core workflow implementation
 - [x] MCP server integration
 - [x] Claude Code skills system
+- [x] Folder management system
 - [ ] Web dashboard
 - [ ] VS Code extension
 - [ ] Team collaboration features
