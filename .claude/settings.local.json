@@ -14,7 +14,8 @@
       "Bash(git add -A)",
       "Bash(git commit -m \"Add GitHub setup guide and update settings\n\n- Comprehensive GitHub setup documentation\n- Instructions for connecting to repository\n- Personal Access Token guide\n- Troubleshooting section\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
       "Bash(git remote add origin https://github.com/bsifflard77/specmap-mcp.git)",
-      "Bash(git branch -M main)"
+      "Bash(git branch -M main)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

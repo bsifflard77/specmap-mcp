@@ -41,6 +41,7 @@ try:
     from specmap.tasks import TaskGenerator
     from specmap.config import ConfigManager
     from specmap.skills import SkillManager
+    from specmap.sessions import SessionManager
 except ImportError as e:
     print(f"Error: SpecMap modules not found. Make sure specmap-cli is installed.", file=sys.stderr)
     print(f"Details: {e}", file=sys.stderr)
@@ -887,6 +888,351 @@ async def delete_claude_skill(
             "error": str(e),
             "traceback": traceback.format_exc(),
             "message": f"❌ Failed to delete skill: {str(e)}"
+        }
+
+
+# ============================================================================
+# SESSION MANAGEMENT TOOLS (6 tools)
+# ============================================================================
+
+@server.tool()
+async def session_start(
+    project_path: str,
+    focus: str,
+    agent: str = "claude",
+    metadata: Optional[dict] = None
+) -> dict:
+    """
+    Start a new development session with organized workspace.
+
+    Creates:
+    - Session workspace in 04-agents/sessions/active/
+    - Session metadata tracking file
+    - Organized folders for artifacts, notes, decisions
+    - Session summary template
+
+    Args:
+        project_path: Path to SpecMap project root
+        focus: Focus area for this session (e.g., "authentication feature")
+        agent: AI agent being used (default: "claude")
+        metadata: Optional additional metadata dictionary
+
+    Returns:
+        dict: Session details with workspace paths
+    """
+    try:
+        project_path = Path(project_path).resolve()
+        session_mgr = SessionManager(project_path)
+
+        result = session_mgr.start_session(focus, agent, metadata)
+
+        return {
+            "success": True,
+            "session_id": result['session_id'],
+            "session_path": result['session_path'],
+            "metadata_file": result['metadata_file'],
+            "focus": result['focus'],
+            "agent": result['agent'],
+            "message": (
+                f"✅ Session started: {result['session_id']}\n"
+                f"📁 Workspace: {result['session_path']}\n"
+                f"🎯 Focus: {focus}\n"
+                f"🤖 Agent: {agent}\n\n"
+                f"Session workspace created with:\n"
+                f"  - artifacts/  (files created)\n"
+                f"  - notes/      (scratch work)\n"
+                f"  - decisions/  (technical decisions)\n"
+                f"  - snapshots/  (checkpoints)\n"
+                f"  - session.yaml (metadata)\n"
+                f"  - summary.md  (session summary)"
+            )
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "message": f"❌ Failed to start session: {str(e)}"
+        }
+
+
+@server.tool()
+async def session_checkpoint(
+    project_path: str,
+    session_id: str,
+    description: str,
+    files_to_snapshot: Optional[list] = None
+) -> dict:
+    """
+    Create a checkpoint snapshot of current session state.
+
+    Saves incremental backup of work in progress to allow recovery.
+
+    Args:
+        project_path: Path to SpecMap project root
+        session_id: Session ID to checkpoint
+        description: Description of this checkpoint (e.g., "Auth logic implemented")
+        files_to_snapshot: Optional list of specific files to snapshot
+
+    Returns:
+        dict: Checkpoint details with snapshot location
+    """
+    try:
+        project_path = Path(project_path).resolve()
+        session_mgr = SessionManager(project_path)
+
+        result = session_mgr.create_checkpoint(
+            session_id=session_id,
+            description=description,
+            files_to_snapshot=files_to_snapshot
+        )
+
+        return {
+            "success": True,
+            "checkpoint_id": result['checkpoint_id'],
+            "checkpoint_path": result['checkpoint_path'],
+            "files_snapshotted": result['files_snapshotted'],
+            "description": result['description'],
+            "message": (
+                f"✅ Checkpoint created: {result['checkpoint_id']}\n"
+                f"💾 Location: {result['checkpoint_path']}\n"
+                f"📄 Files: {result['files_snapshotted']}\n"
+                f"📝 {description}"
+            )
+        }
+
+    except ValueError as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": f"❌ Session not found: {str(e)}"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "message": f"❌ Failed to create checkpoint: {str(e)}"
+        }
+
+
+@server.tool()
+async def session_track_artifact(
+    project_path: str,
+    session_id: str,
+    file_path: str,
+    action: str = "created"
+) -> dict:
+    """
+    Track a file artifact in session metadata.
+
+    Records files created or modified during session for tracking.
+
+    Args:
+        project_path: Path to SpecMap project root
+        session_id: Session ID
+        file_path: Path to file (relative to project root)
+        action: "created" or "modified"
+
+    Returns:
+        dict: Tracking confirmation
+    """
+    try:
+        project_path = Path(project_path).resolve()
+        session_mgr = SessionManager(project_path)
+
+        success = session_mgr.track_artifact(session_id, file_path, action)
+
+        if success:
+            return {
+                "success": True,
+                "session_id": session_id,
+                "file_path": file_path,
+                "action": action,
+                "message": f"✅ Tracked: {file_path} ({action})"
+            }
+        else:
+            return {
+                "success": False,
+                "error": "Session not found",
+                "message": f"❌ Session not found: {session_id}"
+            }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "message": f"❌ Failed to track artifact: {str(e)}"
+        }
+
+
+@server.tool()
+async def session_end(
+    project_path: str,
+    session_id: str,
+    rulemap_score: Optional[float] = None,
+    create_backup: bool = True
+) -> dict:
+    """
+    End a session and archive it with backup.
+
+    Finalizes session, archives workspace, creates backup.
+
+    Args:
+        project_path: Path to SpecMap project root
+        session_id: Session ID to end
+        rulemap_score: Optional RULEMAP score (0-10) for session quality
+        create_backup: Whether to create backup (default: True)
+
+    Returns:
+        dict: Archival details and session summary
+    """
+    try:
+        project_path = Path(project_path).resolve()
+        session_mgr = SessionManager(project_path)
+
+        result = session_mgr.end_session(
+            session_id=session_id,
+            rulemap_score=rulemap_score,
+            create_backup=create_backup
+        )
+
+        message_parts = [
+            f"✅ Session ended: {result['session_id']}",
+            f"📊 Duration: {result['duration_minutes']} minutes",
+            f"📁 Files created: {result['files_created']}",
+            f"📝 Files modified: {result['files_modified']}",
+            f"💾 Checkpoints: {result['checkpoints']}"
+        ]
+
+        if rulemap_score:
+            message_parts.append(f"🎯 RULEMAP Score: {rulemap_score}/10")
+
+        message_parts.extend([
+            f"",
+            f"📦 Archived: {result['archive_path']}"
+        ])
+
+        if result['backup_path']:
+            message_parts.append(f"💾 Backup: {result['backup_path']}")
+
+        return {
+            "success": True,
+            "session_id": result['session_id'],
+            "duration_minutes": result['duration_minutes'],
+            "files_created": result['files_created'],
+            "files_modified": result['files_modified'],
+            "checkpoints": result['checkpoints'],
+            "archive_path": result['archive_path'],
+            "backup_path": result['backup_path'],
+            "message": "\n".join(message_parts)
+        }
+
+    except ValueError as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": f"❌ Session not found: {str(e)}"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "message": f"❌ Failed to end session: {str(e)}"
+        }
+
+
+@server.tool()
+async def session_list_active(
+    project_path: str
+) -> dict:
+    """
+    List all active sessions.
+
+    Args:
+        project_path: Path to SpecMap project root
+
+    Returns:
+        dict: List of active sessions with details
+    """
+    try:
+        project_path = Path(project_path).resolve()
+        session_mgr = SessionManager(project_path)
+
+        sessions = session_mgr.list_active_sessions()
+
+        return {
+            "success": True,
+            "total_sessions": len(sessions),
+            "sessions": sessions,
+            "message": f"📋 Found {len(sessions)} active session(s)"
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "message": f"❌ Failed to list sessions: {str(e)}"
+        }
+
+
+@server.tool()
+async def create_daily_backup(
+    project_path: str
+) -> dict:
+    """
+    Create daily backup of entire project.
+
+    Backs up all critical files and folders:
+    - Governance (constitution, charter)
+    - Specifications
+    - Planning documents
+    - Implementation tracking
+    - Session summaries
+    - TRACKING.md
+
+    Args:
+        project_path: Path to SpecMap project root
+
+    Returns:
+        dict: Backup details with manifest
+    """
+    try:
+        project_path = Path(project_path).resolve()
+        session_mgr = SessionManager(project_path)
+
+        result = session_mgr.create_daily_backup()
+
+        return {
+            "success": True,
+            "backup_date": result['backup_date'],
+            "backup_path": result['backup_path'],
+            "items_backed_up": result['items_backed_up'],
+            "manifest": result['manifest'],
+            "message": (
+                f"✅ Daily backup created: {result['backup_date']}\n"
+                f"📁 Location: {result['backup_path']}\n"
+                f"📦 Items: {result['items_backed_up']}\n"
+                f"📄 Manifest: {result['manifest']}\n\n"
+                f"Backed up:\n"
+                f"  - Governance documents\n"
+                f"  - All specifications\n"
+                f"  - Implementation plans\n"
+                f"  - Session archives\n"
+                f"  - Project tracking"
+            )
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "message": f"❌ Failed to create backup: {str(e)}"
         }
 
 

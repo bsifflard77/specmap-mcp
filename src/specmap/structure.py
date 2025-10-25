@@ -34,6 +34,13 @@ class ProjectStructure:
         # Agents (AI agent management)
         "04-agents",
         "04-agents/session-summaries",
+        "04-agents/sessions",
+        "04-agents/sessions/active",
+        "04-agents/sessions/archive",
+        "04-agents/backups",
+        "04-agents/backups/daily",
+        "04-agents/backups/sessions",
+        "04-agents/backups/milestones",
         "04-agents/agent-configurations",
         "04-agents/agent-configurations/claude",
         "04-agents/agent-configurations/gemini",

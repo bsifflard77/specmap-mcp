@@ -1,0 +1,18 @@
+session:
+  id: 2025-10-25-session-001-session-management-system-test
+  date: '2025-10-25'
+  start_time: '10:20:39'
+  end_time: '10:21:20'
+  focus: Session management system testing
+  agent: claude
+  status: completed
+artifacts:
+  created: []
+  modified: []
+checkpoints: []
+metrics:
+  duration_minutes: 0
+  files_created: 0
+  files_modified: 0
+  checkpoints: 0
+rulemap_score: 9.0
