@@ -126,6 +126,116 @@ specmap skill delete my-skill
 
 See [SKILLS.md](docs/SKILLS.md) for complete documentation.
 
+## Session Management & Backups
+
+SpecMap includes a comprehensive session management system to organize your development work and ensure nothing is lost.
+
+### What is Session Management?
+
+Every development session is:
+- **Organized** - Consistent folder structure with clear naming
+- **Tracked** - Complete metadata and artifact tracking
+- **Backed up** - Automatic backups at session boundaries
+- **Recoverable** - Restore from any checkpoint or backup
+
+### Quick Start with Sessions
+
+```bash
+# Start a new session
+python scripts/session-start.py "feature name" claude
+
+# Create checkpoints during work
+python scripts/session-checkpoint.py <session-id> "milestone description"
+
+# End session with backup
+python scripts/session-end.py <session-id> 8.5
+
+# Create daily project backup
+python scripts/backup-project.py
+```
+
+### Automatic Session Management (Claude Code)
+
+Install the session manager skill for automatic lifecycle management:
+
+```bash
+specmap skill install specmap-session-manager
+```
+
+In Claude Code:
+```
+/skill specmap-session-manager
+Let's work on the authentication feature
+```
+
+Claude will automatically:
+- Start a new organized session
+- Create checkpoints at appropriate times
+- Track all files created/modified
+- End session with backup when you're done
+
+### Session Structure
+
+Each session creates an organized workspace:
+
+```
+04-agents/sessions/active/2025-10-25-session-001-authentication/
+├── artifacts/              # Files created during session
+├── notes/                  # Scratch work and ideas
+├── decisions/              # Technical decisions documented
+├── snapshots/              # Checkpoint backups
+│   ├── checkpoint-001-15-00-00/
+│   └── checkpoint-002-16-30-00/
+├── session.yaml            # Complete session metadata
+├── summary.md              # Session summary template
+└── README.md               # Session guide
+```
+
+### Backup Strategy
+
+**Session Backups** (automatic):
+- Created when you end a session
+- Full ZIP archive of session workspace
+- Stored in `04-agents/backups/sessions/`
+
+**Daily Backups** (manual):
+- Backs up governance, specs, plans, tracking
+- Run: `python scripts/backup-project.py`
+- Stored in `04-agents/backups/daily/YYYY-MM-DD/`
+
+**Checkpoints** (during session):
+- Create snapshots of work in progress
+- Restore to any checkpoint if needed
+- Automatic with session manager skill
+
+### Recovery & Restore
+
+```bash
+# List available backups
+python scripts/restore-session.py --list-backups
+
+# Restore from session backup
+python scripts/restore-session.py --restore-backup <session-id>
+
+# List checkpoints for a session
+python scripts/restore-session.py --list-checkpoints <session-id>
+
+# Restore from specific checkpoint
+python scripts/restore-session.py --restore-checkpoint <session-id> <checkpoint-id>
+```
+
+### MCP Tools for Sessions
+
+The MCP server provides session management tools:
+- `session_start()` - Start new session
+- `session_checkpoint()` - Create checkpoint
+- `session_track_artifact()` - Track files
+- `session_end()` - End and archive session
+- `session_list_active()` - List active sessions
+- `create_daily_backup()` - Daily backup
+
+See [docs/SESSION-MANAGEMENT.md](docs/SESSION-MANAGEMENT.md) for complete documentation.
+
 ## MCP Server
 
 The SpecMap MCP server provides tools for AI integration:
@@ -189,6 +299,14 @@ my-project/
 │       └── technical-decisions.md
 ├── 03-implementation/      # Dev tracking
 ├── 04-agents/             # Agent management
+│   ├── sessions/          # Session management
+│   │   ├── active/        # Current sessions
+│   │   └── archive/       # Completed sessions
+│   ├── backups/           # Session & project backups
+│   │   ├── daily/         # Daily backups
+│   │   ├── sessions/      # Session backups
+│   │   └── milestones/    # Milestone backups
+│   └── session-summaries/ # Session logs
 ├── 05-quality-assurance/  # QA & validation
 ├── 06-documentation/      # Project docs
 ├── 07-project-tracking/   # Progress tracking
@@ -400,6 +518,7 @@ python -m specmap_mcp.server
 ## Documentation
 
 - [Skills Guide](docs/SKILLS.md) - Complete skill documentation
+- [Session Management](docs/SESSION-MANAGEMENT.md) - Session & backup system
 - [MCP Server API](docs/MCP_SERVER.md) - MCP server reference
 - [RULEMAP Guide](docs/RULEMAP.md) - Framework details
 - [CLI Reference](docs/CLI.md) - Command reference
@@ -461,6 +580,7 @@ MIT License - see LICENSE file
 - [x] Core workflow implementation
 - [x] MCP server integration
 - [x] Claude Code skills system
+- [x] Session management & backup system
 - [ ] Web dashboard
 - [ ] VS Code extension
 - [ ] Team collaboration features
